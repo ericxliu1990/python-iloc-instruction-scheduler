@@ -30,12 +30,15 @@ class InstrctRenameGen(object):
 			oprand.val = self.rename_map[oprand.val]
 
 	def rename(self):
-		for idx, instrct in enumerate(reversed(self.instrct_list)):
+		for idx, instrct in reversed(list(enumerate(self.instrct_list))):
 			origin_instrct = Instruction.deepcopy(instrct)
 			self.update(instrct.dest, idx)
 			if instrct.dest and instrct.dest.is_register():
-				del self.rename_map[origin_instrct.dest.val]
-				del self.last_used[origin_instrct.dest.val]
+				if not instrct.opcode == "store":
+					del self.rename_map[origin_instrct.dest.val]
+					del self.last_used[origin_instrct.dest.val]
 			map(lambda x: self.update(x, idx), instrct.src)
+			# print self.rename_map
+			# print self.last_used
 
 		

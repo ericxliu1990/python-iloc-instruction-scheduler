@@ -25,7 +25,6 @@ def arguments_parse():
 	argument_parser.add_argument("filename", help = FILENAME_HELP, 
 		type = lambda x: is_valid_file(argument_parser, x))
 	arguments = argument_parser.parse_args()
-	# print arguments.t,arguments.s,arguments.r, arguments.filename
 	return arguments
 
 def main():
@@ -33,14 +32,8 @@ def main():
 	parser = iloc_parser.IlocParser(arguments.filename)
 	instrct_list = parser.parse()
 	a_dep_graph_gen = dep_graph_gen.DepGraphGen(instrct_list)
-	print a_dep_graph_gen.get_instrct_list()
-	print "------"
 	a_dep_graph_gen.rename()
 	print a_dep_graph_gen.get_instrct_list()
-	# allocator = ILOCAllocator(parser.get_instruction_list(), arguments.k)
-	# allocator.find_live_ranges()
-	# allocator.print_instruction()
-	# save_file(arguments.filename.name, allocator.instruction_list)
 
 if __name__ == '__main__':
 	main()

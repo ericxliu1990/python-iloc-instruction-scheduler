@@ -18,7 +18,6 @@ run:
 INPUT = $(shell cat $(RUN_ARGS) | egrep INPUT | awk '{for(i = 3; i <= NF; i++){printf "%s ",$$i}}')
 OUTPUT = $(shell cat $(RUN_ARGS) | egrep OUTPUT | awk '{for(i = 2; i <= NF; i++){printf "%s ",$$i}}')
 sim:
-	@clear
 	@scheduler $(RUN_ARGS) > a.i
 	@echo "The origin result" $(OUTPUT)
 	@lab3sim/sim < $(RUN_ARGS) $(INPUT)
