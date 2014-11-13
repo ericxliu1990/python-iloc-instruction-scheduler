@@ -33,7 +33,8 @@ def main():
 	instrct_list = parser.parse()
 	a_dep_graph_gen = dep_graph_gen.DepGraphGen(instrct_list)
 	a_dep_graph_gen.rename()
-	# print a_dep_graph_gen.get_instrct_list()
-
+	a_dep_graph_gen.build_dep_graph()
+	print a_dep_graph_gen.get_instrct_list()
+	
 if __name__ == '__main__':
 	main()

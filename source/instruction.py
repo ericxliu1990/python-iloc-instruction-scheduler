@@ -8,6 +8,7 @@ class Instruction(object):
 		self.opcode = opcode
 		self.src = src
 		self.dest = dest
+		self.dep_set  = None
 		self.latency = 0
 	def __repr__(self):
 		if self.opcode == "nop":
@@ -15,6 +16,8 @@ class Instruction(object):
 		if self.opcode == "output":
 			return "%s %s" % (self.opcode, repr(self.dest))
 		return "%s %s => %s" %(self.opcode, ",".join(map(repr, self.src)),repr(self.dest))
+	def set_dep_set(self, dep_set):
+		self.dep_set = dep_set
 
 class Oprend(object):
 	"""docstring for Oprend"""

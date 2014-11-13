@@ -1,6 +1,6 @@
 NO_NEXT_USE = -1
 from instruction import Instruction
-
+import operator
 class DepGraphGen(object):
 	"""docstring for DepGraphGen"""
 	def __init__(self, instrct_list):
@@ -9,6 +9,30 @@ class DepGraphGen(object):
 	def rename(self):
 		instrct_rename_gen = InstrctRenameGen(self.instrct_list)
 		instrct_rename_gen.rename()
+
+	def find_reg_dep(self, instrct_chk):
+		""""""
+		def depend(instrct_chk, instrct):
+			""""""
+			def build_reg_chk_list(instrct):
+				reg_chk_list = filter(operator.methodcaller("is_register"), instrct.src)
+				if instrct.dest.is_register():
+					reg_chk_list.append(instrct.dest)
+				return reg_chk_list
+
+			if instrct_chk == instrct:
+				return False
+			for oprand_1 in build_reg_chk_list(instrct_chk):
+				for oprand_2 in build_reg_chk_list(instrct):
+					if oprand_1.val == oprand_2.val:
+						return True
+			return False
+
+		return filter(lambda x: depend(instrct_chk, x), self.instrct_list)
+
+	def build_dep_graph(self):
+		for instrct in self.instrct_list:
+			instrct.set_dep_set(self.find_reg_dep(instrct))
 
 	def get_instrct_list(self):
 		return "\n".join(map(str,self.instrct_list))
@@ -38,7 +62,6 @@ class InstrctRenameGen(object):
 					del self.rename_map[origin_dest_val]
 					del self.last_used[origin_dest_val]
 			map(lambda x: self.update(x, idx), instrct.src)
-			# print self.rename_map
-			# print self.last_used
+
 
 		
