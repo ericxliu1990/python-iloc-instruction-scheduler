@@ -15,9 +15,6 @@ class Instruction(object):
 		if self.opcode == "output":
 			return "%s %s" % (self.opcode, repr(self.dest))
 		return "%s %s => %s" %(self.opcode, ",".join(map(repr, self.src)),repr(self.dest))
-	@classmethod
-	def deepcopy(self, instrct):
-		return copy.deepcopy(instrct)
 
 class Oprend(object):
 	"""docstring for Oprend"""

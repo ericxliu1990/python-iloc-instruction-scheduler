@@ -25,5 +25,5 @@ sim:
 	@lab3sim/sim < a.i $(INPUT)
 	@rm -f a.i
 profile:
-	@python -m cProfile -s 'tottime' iloc_instruction_scheduler.py timing/T128k.i | head -15
+	@python -m cProfile -s 'tottime' source/iloc_instruction_scheduler.py timing/T128k.i | head -15
 	@rm a.out

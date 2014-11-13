@@ -31,12 +31,12 @@ class InstrctRenameGen(object):
 
 	def rename(self):
 		for idx, instrct in reversed(list(enumerate(self.instrct_list))):
-			origin_instrct = Instruction.deepcopy(instrct)
+			origin_dest_val = instrct.dest.val
 			self.update(instrct.dest, idx)
 			if instrct.dest and instrct.dest.is_register():
 				if not instrct.opcode == "store":
-					del self.rename_map[origin_instrct.dest.val]
-					del self.last_used[origin_instrct.dest.val]
+					del self.rename_map[origin_dest_val]
+					del self.last_used[origin_dest_val]
 			map(lambda x: self.update(x, idx), instrct.src)
 			# print self.rename_map
 			# print self.last_used
