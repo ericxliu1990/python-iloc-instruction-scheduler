@@ -35,6 +35,7 @@ def main():
 	a_dep_graph_gen.rename()
 	a_dep_graph_gen.build_dep_graph()
 	print a_dep_graph_gen.get_instrct_list()
-	
+	# for _ in a_dep_graph_gen.instrct_list:
+	# 	print _, _.dep_set
 if __name__ == '__main__':
 	main()

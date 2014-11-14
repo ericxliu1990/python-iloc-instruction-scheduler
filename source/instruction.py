@@ -8,23 +8,34 @@ class Instruction(object):
 		self.opcode = opcode
 		self.src = src
 		self.dest = dest
-		self.dep_set  = None
+		self.oprands = list(src)
+		if dest:
+			self.oprands.append(dest)
+		self.dep_set  = set([])
 		self.latency = 0
 	def __repr__(self):
 		if self.opcode == "nop":
 			return self.opcode
 		if self.opcode == "output":
 			return "%s %s" % (self.opcode, repr(self.dest))
+		# print self.oprands
 		return "%s %s => %s" %(self.opcode, ",".join(map(repr, self.src)),repr(self.dest))
 	def set_dep_set(self, dep_set):
-		self.dep_set = dep_set
-
+		self.dep_set.update(dep_set)
+class Register(object):
+	"""docstring for Register"""
+	def __init__(self, arg):
+		
+		self.arg = arg
+		
 class Oprend(object):
 	"""docstring for Oprend"""
-	def __init__(self):
-		pass
+	def __init__(self, val):
+		self.val = val
 	def __repr__(self):
 		raise NotImplementedError
+	def set_val(self, val):
+		self.val = val
 	def is_register(self):
 		return False
 	def is_immediate(self):
@@ -35,7 +46,7 @@ class Oprend(object):
 class Register(Oprend):
 	"""docstring for register"""
 	def __init__(self, val):
-		self.val = val
+		super(Register, self).__init__(val)
 	def __repr__(self):
 		return "r%s" % self.val
 	def is_register(self):
@@ -44,15 +55,16 @@ class Register(Oprend):
 class Immediate(Oprend):
 	"""docstring for Immediate"""
 	def __init__(self, val):
-		self.val = val
+		super(Immediate, self).__init__(val)
 	def __repr__(self):
 		return repr(self.val)
 	def is_immediate(self):
 		return True
+
 class Address(Oprend):
 	"""docstring for ClassName"""
 	def __init__(self, val):
-		self.val = val
+		super(Address, self).__init__(val)
 	def __repr__(self):
 		return repr(self.val)
 	def is_address(self):
