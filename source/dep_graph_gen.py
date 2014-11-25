@@ -1,6 +1,10 @@
 NO_NEXT_USE = -1
 from instruction import Instruction
+from subprocess import call
 import operator
+
+is_gen_graphviz = False
+
 class DepGraphGen(object):
 	"""docstring for DepGraphGen"""
 	def __init__(self, instrct_list):
@@ -10,42 +14,116 @@ class DepGraphGen(object):
 		instrct_rename_gen = InstrctRenameGen(self.instrct_list)
 		instrct_rename_gen.rename()
 
-	def find_mem_dep(self, instrct_chk):
-		pass
-
 	def build_dep_graph(self):
-		reg_dep_gen = RegDepGen(self.instrct_list)
-		reg_dep_gen.find_reg_dep()
+		instrct_dep_gen = InstrctDepGen(self.instrct_list)
+		instrct_dep_gen.find_reg_dep()
 
 	def get_instrct_list(self):
 		return "\n".join(map(str,self.instrct_list))
 
-class RegDepGen(object):
+	def gen_graphviz_file(self, filename, offset = 14):
+		if is_gen_graphviz:
+			dot_file_name = filename.name.replace(".i",".before.dot")
+			dot_file = open(dot_file_name, "w")
+			dot_file.write("digraph DG {\n")
+			for idx, instrct in enumerate(self.instrct_list):
+				dot_file.write('  %s [label="%s:  %s"];\n' % (idx + offset, idx + offset, str(instrct)))
+			edge_num = 0
+			for idx, instrct in enumerate(self.instrct_list):
+				for another_instrct in instrct.dep_set:
+					dot_file.write('  %s -> %s [label="%s, %s"];\n' % (idx + offset, self.instrct_list.index(another_instrct[0]) + offset, another_instrct[1], another_instrct[2]))
+					edge_num += 1
+			dot_file.write("}")
+			dot_file.close()
+			print edge_num
+			call(["/usr/local/Cellar/graphviz/2.38.0/Graphviz.app/Contents/MacOS/Graphviz", dot_file_name])
+
+class InstrctDepGen(object):
 	"""docstring for InstrctDepGen"""
 	def __init__(self, instrct_list):
 		self.instrct_list = instrct_list
 		self.reg_dep = {}
+		self.load_list = []
+		self.output_list = []
+		self.store_list = []
 
-	def update(self, oprand, instrct):
-		if oprand and oprand.is_register():
-			if not oprand.val in self.reg_dep:
-				self.reg_dep[oprand.val] = []
-			self.reg_dep[oprand.val].append(instrct)
-
-	def build_dep_set(self, instrct):
-		def dep_list_extend(oprand):
+	def reg_update(self, instrct):
+		if not instrct.opcode == "store":
+			oprand = instrct.dest
 			if oprand and oprand.is_register():
-				if self.reg_dep.get(oprand.val):
-					dep_list.extend(self.reg_dep[oprand.val])
-		dep_list = []
-		map(dep_list_extend, instrct.oprands)
-		return dep_list
+				if oprand.val in self.reg_dep:
+					raise ValueError
+				if is_gen_graphviz:
+					self.reg_dep[oprand.val] = (instrct, oprand, instrct.latency)
+				else:
+					self.reg_dep[oprand.val] = instrct
+
+
+	def mem_update(self, instrct):
+		if is_gen_graphviz:
+			if instrct.is_load():
+				self.load_list.append((instrct, "IO Edge", instrct.latency))
+			if instrct.is_output():
+				self.output_list.append((instrct, "output", instrct.latency))
+			if instrct.is_store():
+				self.store_list.append((instrct, "IO Edge", instrct.latency))
+		else:
+			if instrct.is_load():
+				self.load_list.append(instrct)
+			if instrct.is_output():
+				self.output_list.append(instrct)
+			if instrct.is_store():
+				self.store_list.append(instrct)
 
 	def find_reg_dep(self):
 		for instrct in self.instrct_list:
-			instrct.set_dep_set(self.build_dep_set(instrct))
-			map(lambda x: self.update(x, instrct), instrct.oprands)
-			print instrct, instrct.dep_set
+			dep_list_gen = DepListGen(instrct, self.reg_dep, self.load_list, self.output_list, self.store_list)
+			dep_list = dep_list_gen.build_dep_list()
+			# print self.instrct_list.index(instrct), instrct
+			# # print self.reg_dep
+			# print dep_list
+			# print "---------------"
+			if is_gen_graphviz:
+				if not len(set(dep_list)) == len(dep_list):
+					raise Exception
+			instrct.set_dep_set(dep_list)
+
+			#update to the working sets
+			self.reg_update(instrct)
+			self.mem_update(instrct)
+
+class DepListGen(object):
+	"""docstring for ClassName"""
+	def __init__(self, instrct, reg_dep, load_list, output_list, store_list):
+		self.instrct = instrct
+		self.reg_dep = reg_dep
+		self.load_list = load_list
+		self.output_list = output_list
+		self.store_list = store_list
+		self.dep_list = []
+
+	def append_last(self, a_list):
+		if len(a_list) > 0:
+			self.dep_list.append(a_list[-1])
+
+	def append_reg_dep(self, oprand):
+		if oprand and oprand.is_register():
+			if self.reg_dep.get(oprand.val):
+				self.dep_list.append(self.reg_dep[oprand.val])
+
+	def build_dep_list(self):
+		map(self.append_reg_dep, self.instrct.oprands)
+		if self.instrct.is_load():
+			self.dep_list.extend(self.store_list)
+		if self.instrct.is_output():
+			self.dep_list.extend(self.store_list)
+			self.append_last(self.output_list)
+		if self.instrct.is_store():
+			self.dep_list.extend(self.store_list)
+			self.dep_list.extend(self.load_list)
+			self.dep_list.extend(self.output_list)
+		return self.dep_list
+
 
 class InstrctRenameGen(object):
 	"""docstring for InstrctRename"""

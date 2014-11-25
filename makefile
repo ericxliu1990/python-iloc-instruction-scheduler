@@ -6,7 +6,21 @@ ifeq (run,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
+ifeq (viz,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
 ifeq (sim,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
+ifeq (profile,$(firstword $(MAKECMDGOALS)))
   # use the rest as arguments for "run"
   RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   # ...and turn them into do-nothing targets
@@ -15,6 +29,7 @@ endif
 
 run:
 	@scheduler $(RUN_ARGS)
+
 INPUT = $(shell cat $(RUN_ARGS) | egrep INPUT | awk '{for(i = 3; i <= NF; i++){printf "%s ",$$i}}')
 OUTPUT = $(shell cat $(RUN_ARGS) | egrep OUTPUT | awk '{for(i = 2; i <= NF; i++){printf "%s ",$$i}}')
 sim:
@@ -25,4 +40,5 @@ sim:
 	@lab3sim/sim < a.i $(INPUT)
 	@rm -f a.i
 profile:
-	python -m cProfile -s 'tottime' source/iloc_instruction_scheduler.py timing/T8k.i | head -15
+	@echo "Profiling timing/T$(RUN_ARGS)k.i"
+	@python -m cProfile -s 'tottime' source/iloc_instruction_scheduler.py timing/T$(RUN_ARGS)k.i | head -15

@@ -1,7 +1,8 @@
 """
 
 """
-import copy
+latencies = {'nop': 1, 'add': 1, 'sub': 1, 'mult': 3, 'div': 3, 'load': 5, 'loadI': 1, 'store': 5, 'output': 1, "lshift": 1, "rshift": 1}
+
 class Instruction(object):
 	"""represent an instruction"""
 	def __init__(self, opcode, src = [], dest = None):
@@ -11,8 +12,9 @@ class Instruction(object):
 		self.oprands = list(src)
 		if dest:
 			self.oprands.append(dest)
-		self.dep_set  = set([])
-		self.latency = 0
+		self.dep_set  = None
+		self.latency = latencies[opcode]
+
 	def __repr__(self):
 		if self.opcode == "nop":
 			return self.opcode
@@ -20,8 +22,25 @@ class Instruction(object):
 			return "%s %s" % (self.opcode, repr(self.dest))
 		# print self.oprands
 		return "%s %s => %s" %(self.opcode, ",".join(map(repr, self.src)),repr(self.dest))
+
 	def set_dep_set(self, dep_set):
-		self.dep_set.update(dep_set)
+		self.dep_set = dep_set
+
+	def is_load(self):
+		if self.opcode == "load":
+			return True
+		return False
+
+	def is_output(self):
+		if self.opcode == "output":
+			return True
+		return False
+
+	def is_store(self):
+		if self.opcode == "store":
+			return True
+		return False
+
 class Register(object):
 	"""docstring for Register"""
 	def __init__(self, arg):
