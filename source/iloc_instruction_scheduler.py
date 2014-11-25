@@ -35,6 +35,7 @@ def main():
 	arguments = arguments_parse()
 	parser = iloc_parser.IlocParser(arguments.filename)
 	instrct_list = parser.parse()
+	print instrct_list
 	dep_graph_gen.is_gen_graphviz = arguments.g
 	a_dep_graph_gen = dep_graph_gen.DepGraphGen(instrct_list)
 	a_dep_graph_gen.rename()

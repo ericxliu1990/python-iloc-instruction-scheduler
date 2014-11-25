@@ -13,7 +13,7 @@ class IlocParser():
 	def parse(self):
 		""""""
 		def rm_comment(text):
-			return re.sub(re.compile("//.*?\n" ) ,"" ,text) 
+			return re.sub(re.compile("//.*?\n" ) ,"\n" ,text) 
 		def read_lines(text):
 			return [line for line in text.split("\n") if not line.strip() == ""]
 		def torkz_instrct(text):
@@ -36,7 +36,6 @@ class IlocParser():
 								[oprand_factory(line_list[0], item) for item in line_list[1 : line_list.index("=>")]],
 								oprand_factory(line_list[0], line_list[-1]))
 			return [instrct_factory(line) for line in text]
-		
 		return torkz_instrct(read_lines(rm_comment(self.iloc_input)))
 
 		

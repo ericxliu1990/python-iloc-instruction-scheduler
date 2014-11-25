@@ -36,7 +36,7 @@ class DepGraphGen(object):
 			dot_file.write("}")
 			dot_file.close()
 			print edge_num
-			call(["/usr/local/Cellar/graphviz/2.38.0/Graphviz.app/Contents/MacOS/Graphviz", dot_file_name])
+			# call(["/usr/local/Cellar/graphviz/2.38.0/Graphviz.app/Contents/MacOS/Graphviz", dot_file_name])
 
 class InstrctDepGen(object):
 	"""docstring for InstrctDepGen"""
@@ -64,7 +64,7 @@ class InstrctDepGen(object):
 			if instrct.is_load():
 				self.load_list.append((instrct, "IO Edge", instrct.latency))
 			if instrct.is_output():
-				self.output_list.append((instrct, "output", instrct.latency))
+				self.output_list.append((instrct, "IO Edge", instrct.latency))
 			if instrct.is_store():
 				self.store_list.append((instrct, "IO Edge", instrct.latency))
 		else:
@@ -106,6 +106,21 @@ class DepListGen(object):
 		if len(a_list) > 0:
 			self.dep_list.append(a_list[-1])
 
+	def extend_list(self, a_list):
+		def is_instrct_in_dep_list(instrct):
+			for (another_instrct, label, latency) in self.dep_list: 
+				if instrct[0] == another_instrct:
+					return True
+			return False
+
+		for instrct in a_list:
+			if is_gen_graphviz:
+				if not is_instrct_in_dep_list(instrct):
+					self.dep_list.append(instrct)
+			else:
+				if not instrct in self.dep_list:
+					self.dep_list.append(instrct)
+
 	def append_reg_dep(self, oprand):
 		if oprand and oprand.is_register():
 			if self.reg_dep.get(oprand.val):
@@ -114,14 +129,15 @@ class DepListGen(object):
 	def build_dep_list(self):
 		map(self.append_reg_dep, self.instrct.oprands)
 		if self.instrct.is_load():
-			self.dep_list.extend(self.store_list)
+			self.extend_list(self.store_list)
 		if self.instrct.is_output():
-			self.dep_list.extend(self.store_list)
+			self.extend_list(self.store_list)
 			self.append_last(self.output_list)
 		if self.instrct.is_store():
-			self.dep_list.extend(self.store_list)
-			self.dep_list.extend(self.load_list)
-			self.dep_list.extend(self.output_list)
+			self.extend_list(self.store_list)
+			self.extend_list(self.load_list)
+			self.extend_list(self.output_list)
+
 		return self.dep_list
 
 
