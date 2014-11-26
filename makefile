@@ -41,4 +41,4 @@ sim:
 	@rm -f a.i
 profile:
 	@echo "Profiling timing/T$(RUN_ARGS)k.i"
-	@python -m cProfile -s 'tottime' source/iloc_instruction_scheduler.py timing/T$(RUN_ARGS)k.i | head -15
+	@python -m cProfile -s 'tottime' source/iloc_instruction_scheduler.py timing/T$(RUN_ARGS)k.i

@@ -14,6 +14,7 @@ class Instruction(object):
 			self.oprands.append(dest)
 		self.dep_set  = None
 		self.latency = latencies[opcode]
+		self.priority = 0
 
 	def __repr__(self):
 		if self.opcode == "nop":
@@ -24,7 +25,7 @@ class Instruction(object):
 		return "%s %s => %s" %(self.opcode, ",".join(map(repr, self.src)),repr(self.dest))
 
 	def set_dep_set(self, dep_set):
-		self.dep_set = dep_set
+		self.dep_set = set(dep_set)
 
 	def is_load(self):
 		if self.opcode == "load":
@@ -40,6 +41,10 @@ class Instruction(object):
 		if self.opcode == "store":
 			return True
 		return False
+
+	@staticmethod
+	def get_latency(instruction):
+		return instruction.latency
 
 class Register(object):
 	"""docstring for Register"""

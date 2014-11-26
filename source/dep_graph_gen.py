@@ -1,9 +1,7 @@
-NO_NEXT_USE = -1
 from instruction import Instruction
-from subprocess import call
-import operator
 
 is_gen_graphviz = False
+NO_NEXT_USE = -1
 
 class DepGraphGen(object):
 	"""docstring for DepGraphGen"""
@@ -20,23 +18,6 @@ class DepGraphGen(object):
 
 	def get_instrct_list(self):
 		return "\n".join(map(str,self.instrct_list))
-
-	def gen_graphviz_file(self, filename, offset = 14):
-		if is_gen_graphviz:
-			dot_file_name = filename.name.replace(".i",".before.dot")
-			dot_file = open(dot_file_name, "w")
-			dot_file.write("digraph DG {\n")
-			for idx, instrct in enumerate(self.instrct_list):
-				dot_file.write('  %s [label="%s:  %s"];\n' % (idx + offset, idx + offset, str(instrct)))
-			edge_num = 0
-			for idx, instrct in enumerate(self.instrct_list):
-				for another_instrct in instrct.dep_set:
-					dot_file.write('  %s -> %s [label="%s, %s"];\n' % (idx + offset, self.instrct_list.index(another_instrct[0]) + offset, another_instrct[1], another_instrct[2]))
-					edge_num += 1
-			dot_file.write("}")
-			dot_file.close()
-			print edge_num
-			# call(["/usr/local/Cellar/graphviz/2.38.0/Graphviz.app/Contents/MacOS/Graphviz", dot_file_name])
 
 class InstrctDepGen(object):
 	"""docstring for InstrctDepGen"""
@@ -57,7 +38,6 @@ class InstrctDepGen(object):
 					self.reg_dep[oprand.val] = (instrct, oprand, instrct.latency)
 				else:
 					self.reg_dep[oprand.val] = instrct
-
 
 	def mem_update(self, instrct):
 		if is_gen_graphviz:
@@ -85,6 +65,7 @@ class InstrctDepGen(object):
 			# print "---------------"
 			if is_gen_graphviz:
 				if not len(set(dep_list)) == len(dep_list):
+					print dep_list
 					raise Exception
 			instrct.set_dep_set(dep_list)
 
@@ -106,37 +87,38 @@ class DepListGen(object):
 		if len(a_list) > 0:
 			self.dep_list.append(a_list[-1])
 
-	def extend_list(self, a_list):
+	def append(self, instrct):
 		def is_instrct_in_dep_list(instrct):
 			for (another_instrct, label, latency) in self.dep_list: 
 				if instrct[0] == another_instrct:
 					return True
 			return False
+		if is_gen_graphviz:
+			if not is_instrct_in_dep_list(instrct):
+				self.dep_list.append(instrct)
+		else:
+			if not instrct in self.dep_list:
+				self.dep_list.append(instrct)
 
-		for instrct in a_list:
-			if is_gen_graphviz:
-				if not is_instrct_in_dep_list(instrct):
-					self.dep_list.append(instrct)
-			else:
-				if not instrct in self.dep_list:
-					self.dep_list.append(instrct)
+	def extend(self, a_list):
+		map(self.append, a_list)
 
 	def append_reg_dep(self, oprand):
 		if oprand and oprand.is_register():
 			if self.reg_dep.get(oprand.val):
-				self.dep_list.append(self.reg_dep[oprand.val])
+				self.append(self.reg_dep[oprand.val])
 
 	def build_dep_list(self):
 		map(self.append_reg_dep, self.instrct.oprands)
 		if self.instrct.is_load():
-			self.extend_list(self.store_list)
+			self.extend(self.store_list)
 		if self.instrct.is_output():
-			self.extend_list(self.store_list)
+			self.extend(self.store_list)
 			self.append_last(self.output_list)
 		if self.instrct.is_store():
-			self.extend_list(self.store_list)
-			self.extend_list(self.load_list)
-			self.extend_list(self.output_list)
+			self.extend(self.store_list)
+			self.extend(self.load_list)
+			self.extend(self.output_list)
 
 		return self.dep_list
 
@@ -163,6 +145,3 @@ class InstrctRenameGen(object):
 				if not instrct.opcode == "store":
 					del self.rename_map[origin_dest_val]
 			map(self.update, instrct.src)
-
-
-		

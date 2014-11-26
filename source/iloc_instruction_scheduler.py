@@ -5,6 +5,8 @@ The main file for the instruction scheduler
 import argparse, os
 import iloc_parser
 import dep_graph_gen
+import priority_gen
+from subprocess import call
 
 DESCRIPTION = """
 An instruction scheduler for a single basic block
@@ -31,17 +33,38 @@ def arguments_parse():
 	arguments = argument_parser.parse_args()
 	return arguments
 
+def gen_graphviz_file(is_gen_graphviz, instrct_list, filename, offset = 0):
+	if is_gen_graphviz:
+		dot_file_name = filename.name.replace(".i",".before.dot")
+		dot_file = open(dot_file_name, "w")
+		dot_file.write("digraph DG {\n")
+		for idx, instrct in enumerate(instrct_list):
+			dot_file.write('  %s [label="%s:  %s, %s"];\n' % (idx + offset, idx + offset, str(instrct), instrct.priority))
+		edge_num = 0
+		for idx, instrct in enumerate(instrct_list):
+			for another_instrct in instrct.dep_set:
+				dot_file.write('  %s -> %s [label="%s, %s"];\n' % (idx + offset, instrct_list.index(another_instrct[0]) + offset, another_instrct[1], another_instrct[2]))
+				edge_num += 1
+		dot_file.write("}")
+		dot_file.close()
+		print edge_num
+		call(["/usr/local/Cellar/graphviz/2.38.0/Graphviz.app/Contents/MacOS/Graphviz", dot_file_name])
+
 def main():
 	arguments = arguments_parse()
 	parser = iloc_parser.IlocParser(arguments.filename)
 	instrct_list = parser.parse()
-	print instrct_list
-	dep_graph_gen.is_gen_graphviz = arguments.g
-	a_dep_graph_gen = dep_graph_gen.DepGraphGen(instrct_list)
-	a_dep_graph_gen.rename()
-	a_dep_graph_gen.build_dep_graph()
-	a_dep_graph_gen.gen_graphviz_file(arguments.filename)
 
+	dep_graph_gen.is_gen_graphviz = arguments.g
+	priority_gen.is_gen_graphviz = arguments.g
+	a_dep_graph_gen = dep_graph_gen.DepGraphGen(instrct_list)
+	a_dep_graph_gen.rename()	
+	a_dep_graph_gen.build_dep_graph()
+
+	a_priority_gen = priority_gen.PriorityGen(instrct_list)
+	a_priority_gen.compute()
+
+	gen_graphviz_file(arguments.g, instrct_list, arguments.filename)
 	# print a_dep_graph_gen.get_instrct_list()
 	# print "--------------------------------"
 	# for _ in a_dep_graph_gen.instrct_list:
