@@ -55,6 +55,9 @@ class InstrctDepGen(object):
 			if instrct.is_store():
 				self.store_list.append(instrct)
 
+	def add_to_successors(self, instrct, dep_instrct):
+		dep_instrct.successors.add(instrct)
+
 	def find_reg_dep(self):
 		for instrct in self.instrct_list:
 			dep_list_gen = DepListGen(instrct, self.reg_dep, self.load_list, self.output_list, self.store_list)
@@ -72,6 +75,9 @@ class InstrctDepGen(object):
 			#update to the working sets
 			self.reg_update(instrct)
 			self.mem_update(instrct)
+
+			#add this instrction to the successor set of all dependencies
+			map(lambda x: self.add_to_successors(instrct, x), dep_list)
 
 class DepListGen(object):
 	"""docstring for ClassName"""

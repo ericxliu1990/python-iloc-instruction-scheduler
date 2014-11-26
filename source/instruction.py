@@ -13,8 +13,10 @@ class Instruction(object):
 		if dest:
 			self.oprands.append(dest)
 		self.dep_set  = None
+		self.successors = set()
 		self.latency = latencies[opcode]
 		self.priority = 0
+		self.schedule = 0
 
 	def __repr__(self):
 		if self.opcode == "nop":
@@ -45,6 +47,9 @@ class Instruction(object):
 	@staticmethod
 	def get_latency(instruction):
 		return instruction.latency
+	@staticmethod
+	def get_schedule(instruction):
+		return instruction.schedule
 
 class Register(object):
 	"""docstring for Register"""

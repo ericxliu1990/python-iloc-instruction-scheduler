@@ -1,5 +1,7 @@
 from instruction import Instruction
+import sys
 
+sys.setrecursionlimit(7000)
 is_gen_graphviz = False
 
 class PriorityGen(object):
@@ -11,7 +13,7 @@ class PriorityGen(object):
 		for instrct in reversed(self.instrct_list):
 			if instrct.priority == 0:
 				self.latency_weighted_distance(instrct)
-			print instrct.priority, instrct
+			# print instrct.priority, instrct
 
 	def highest_latency(self, instrct, seq = 0, choices_set = None):
 		priority = seq + 1

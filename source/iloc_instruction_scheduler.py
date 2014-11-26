@@ -6,6 +6,7 @@ import argparse, os
 import iloc_parser
 import dep_graph_gen
 import priority_gen
+import scheduler
 from subprocess import call
 
 DESCRIPTION = """
@@ -63,6 +64,10 @@ def main():
 
 	a_priority_gen = priority_gen.PriorityGen(instrct_list)
 	a_priority_gen.compute()
+
+	a_scheduler = scheduler.Scheduler(instrct_list)
+	a_scheduler.schedule()
+	print a_scheduler.get_schedule_str()
 
 	gen_graphviz_file(arguments.g, instrct_list, arguments.filename)
 	# print a_dep_graph_gen.get_instrct_list()
