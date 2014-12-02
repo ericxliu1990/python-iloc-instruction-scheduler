@@ -1,5 +1,7 @@
 from instruction import Instruction
 from collections import namedtuple
+
+is_gen_graphviz = False
 FunctionalUnit = namedtuple("FunctionalUnit", ["constrain", "schedule"])
 
 class Scheduler(object):
@@ -56,8 +58,12 @@ class Scheduler(object):
 		if instrct.schedule != 0:
 			return False
 		for dep_instrct in instrct.dep_set:
-			if dep_instrct.schedule <= 0:
-				return False
+			if is_gen_graphviz:
+				if dep_instrct[0].schedule <= 0:
+					return False
+			else:
+				if dep_instrct.schedule <= 0:
+					return False
 		return True
 
 	def get_schedule(self):

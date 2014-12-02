@@ -26,18 +26,22 @@ ifeq (profile,$(firstword $(MAKECMDGOALS)))
   # ...and turn them into do-nothing targets
   $(eval $(RUN_ARGS):;@:)
 endif
-
+all:
+	sh test_all.sh
 run:
 	@scheduler $(RUN_ARGS)
+graph:
+	@scheduler $(RUN_ARGS) -g
 
 INPUT = $(shell cat $(RUN_ARGS) | egrep INPUT | awk '{for(i = 3; i <= NF; i++){printf "%s ",$$i}}')
 OUTPUT = $(shell cat $(RUN_ARGS) | egrep OUTPUT | awk '{for(i = 2; i <= NF; i++){printf "%s ",$$i}}')
 sim:
 	@scheduler $(RUN_ARGS) > a.i
 	@echo "The origin result" $(OUTPUT)
-	@lab3sim/sim < $(RUN_ARGS) $(INPUT)
-	@echo "My result" $(OUTPUT)
-	@lab3sim/sim < a.i $(INPUT)
+	@lab3sim/sim < $(RUN_ARGS) $(INPUT) | tr '\n' ' '
+	@echo "\nMy result"
+	@lab3sim/sim < a.i $(INPUT) | tr '\n' ' '
+	@echo "\n"
 	@rm -f a.i
 profile:
 	@echo "Profiling timing/T$(RUN_ARGS)k.i"

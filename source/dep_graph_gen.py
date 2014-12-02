@@ -13,6 +13,8 @@ class DepGraphGen(object):
 		instrct_rename_gen.rename()
 
 	def build_dep_graph(self):
+		compute_loadi_gen = ComputeLoadIGen(self.instrct_list)
+		compute_loadi_gen.compute()
 		instrct_dep_gen = InstrctDepGen(self.instrct_list)
 		instrct_dep_gen.find_reg_dep()
 
@@ -56,7 +58,10 @@ class InstrctDepGen(object):
 				self.store_list.append(instrct)
 
 	def add_to_successors(self, instrct, dep_instrct):
-		dep_instrct.successors.add(instrct)
+		if is_gen_graphviz:
+			dep_instrct[0].successors.add(instrct)
+		else:
+			dep_instrct.successors.add(instrct)
 
 	def find_reg_dep(self):
 		for instrct in self.instrct_list:
@@ -128,6 +133,40 @@ class DepListGen(object):
 
 		return self.dep_list
 
+class ComputeLoadIGen(object):
+        """docstring for ComputeLoadI"""
+        def __init__(self, instrct_list):
+                self.instrct_list = instrct_list
+                self.working_set = {}
+
+        def operation(self, func, src_0, src_1, dest):
+                if src_0.val in self.working_set and src_1.val in self.working_set:
+                        self.working_set[dest.val] = func(self.working_set[src_0.val], self.working_set[src_1.val])
+
+        def update_working_set(self, instrct):
+                if instrct.opcode == "loadI":
+                        self.working_set[instrct.dest.val] = instrct.src[0].val
+                if instrct.opcode == "load":
+                        if instrct.dest.val in self.working_set:
+                                del self.working_set[instrct.dest.val]
+                if instrct.opcode == "add":
+                        self.operation(lambda x,y: x + y, instrct.src[0], instrct.src[1], instrct.dest)
+                if instrct.opcode == "sub":
+                        self.operation(lambda x,y: x - y, instrct.src[0], instrct.src[1], instrct.dest)
+                if instrct.opcode == "mult":
+                        self.operation(lambda x,y: x * y, instrct.src[0], instrct.src[1], instrct.dest)
+                if instrct.opcode == "div":
+                        self.operation(lambda x,y: x / y, instrct.src[0], instrct.src[1], instrct.dest)
+
+        def update_register(self, instrct):
+                for oprand in instrct.oprands:
+                        if oprand.is_register() and oprand.val in self.working_set:
+                                oprand.set_content(self.working_set[oprand.val])
+
+        def compute(self):
+                for instrct in self.instrct_list:
+                        self.update_working_set(instrct)
+                        self.update_register(instrct)
 
 class InstrctRenameGen(object):
 	"""docstring for InstrctRename"""

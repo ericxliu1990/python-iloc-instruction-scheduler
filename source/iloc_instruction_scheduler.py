@@ -58,6 +58,7 @@ def main():
 
 	dep_graph_gen.is_gen_graphviz = arguments.g
 	priority_gen.is_gen_graphviz = arguments.g
+	scheduler.is_gen_graphviz = arguments.g
 	a_dep_graph_gen = dep_graph_gen.DepGraphGen(instrct_list)
 	a_dep_graph_gen.rename()	
 	a_dep_graph_gen.build_dep_graph()

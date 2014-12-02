@@ -1,6 +1,7 @@
 """
 
 """
+is_print_content = False
 latencies = {'nop': 1, 'add': 1, 'sub': 1, 'mult': 3, 'div': 3, 'load': 5, 'loadI': 1, 'store': 5, 'output': 1, "lshift": 1, "rshift": 1}
 
 class Instruction(object):
@@ -13,6 +14,7 @@ class Instruction(object):
 		if dest:
 			self.oprands.append(dest)
 		self.dep_set  = None
+		self.serial_set  = None
 		self.successors = set()
 		self.latency = latencies[opcode]
 		self.priority = 0
@@ -27,7 +29,7 @@ class Instruction(object):
 		return "%s %s => %s" %(self.opcode, ",".join(map(repr, self.src)),repr(self.dest))
 
 	def set_dep_set(self, dep_set):
-		self.dep_set = set(dep_set)
+		self.dep_set = dep_set
 
 	def is_load(self):
 		if self.opcode == "load":
@@ -44,9 +46,17 @@ class Instruction(object):
 			return True
 		return False
 
+	def is_true_dep(self, instrct):
+		for oprand in self.oprands:
+			for another_oprand in instrct.oprands:
+					if oprand.is_known() and another_oprand.is_known():
+							if oprand.content == another_oprand.content:
+								return True
+
 	@staticmethod
 	def get_latency(instruction):
 		return instruction.latency
+
 	@staticmethod
 	def get_schedule(instruction):
 		return instruction.schedule
@@ -71,15 +81,26 @@ class Oprend(object):
 		return False
 	def is_address(self):
 		return False
+	def is_known(self):
+		return False
 
 class Register(Oprend):
 	"""docstring for register"""
 	def __init__(self, val):
 		super(Register, self).__init__(val)
-	def __repr__(self):
-		return "r%s" % self.val
+		self.content = None
+	if is_print_content:
+			def __repr__(self):
+					return "r%s(%s)" % (self.val, self.content)
+	else:
+			def __repr__(self):
+					return "r%s" % self.val
 	def is_register(self):
-		return True
+			return True
+	def is_known(self):
+			return True if self.content else False
+	def set_content(self, content):
+			self.content = content
 		
 class Immediate(Oprend):
 	"""docstring for Immediate"""
@@ -94,8 +115,11 @@ class Address(Oprend):
 	"""docstring for ClassName"""
 	def __init__(self, val):
 		super(Address, self).__init__(val)
+		self.content = val
 	def __repr__(self):
 		return repr(self.val)
+	def is_known(self):
+		return True
 	def is_address(self):
 		return True
 
